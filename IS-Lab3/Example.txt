@@ -1,0 +1,46 @@
+import numpy as np
+
+def radial_basis_function(x, center, width):
+    return np.exp(-np.sum((x - center)**2) / (2 * width**2))
+
+def train_rbf_perceptron(X, y, num_centers, learning_rate, epochs):
+    # Initialize centers and widths randomly
+    centers = X[np.random.choice(range(len(X)), num_centers, replace=False)]
+    widths = np.ones(num_centers)
+
+    for epoch in range(epochs):
+        total_error = 0
+        for i in range(len(X)):
+            # Calculate RBF activations
+            activations = np.array([radial_basis_function(X[i], centers[j], widths[j]) for j in range(num_centers)])
+
+            # Calculate predicted output
+            prediction = np.sum(activations)
+
+            # Calculate error
+            error = y[i] - prediction
+            total_error += error**2
+
+            # Update centers and widths using gradient descent
+            for j in range(num_centers):
+                delta_center = learning_rate * error * activations[j] * (X[i] - centers[j]) / widths[j]**2
+                delta_width = learning_rate * error * activations[j] * np.sum((X[i] - centers[j])**2) / widths[j]**3
+
+                centers[j] += delta_center
+                widths[j] += delta_width
+
+        # Print the total error for this epoch
+        print(f"Epoch {epoch + 1}/{epochs}, Total Error: {total_error}")
+
+    return centers, widths
+
+# Example usage:
+# X_train and y_train are your training data and labels
+X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_train = np.array([0, 1, 1, 0])
+
+num_centers = 4
+learning_rate = 0.1
+epochs = 100
+
+centers, widths = train_rbf_perceptron(X_train, y_train, num_centers, learning_rate, epochs)
